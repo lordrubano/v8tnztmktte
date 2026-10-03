@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Пошаговая инструкция стола</title>
+<!-- Пошаговый просмотр всего стола (Э3). Основа — образец шага 1, утверждённый владельцем 01.10.2026.
+     Данные — files/data.js (build_viewer_all.py: инструкция.json v0.3.15 + журналы чистовых проходов).
+     Клипы: files/clips/sN-rK.mp4 (строки) и sN-result.mp4 (итог шага); только сборка, без вырезок PDF, без субтитров, без звука.
+     Голос: files/voice/*.m4a — по кнопке, только утверждённые и прослушанные фразы (voice-approved.json); нет файла — «голос готовится».
+     Ссылки: #step=N, #step=N&row=K, #step=N&done. Память: localStorage (если доступна). -->
+<style>
+@font-face{font-family:"Arimo";src:url(files/LiberationSans-Regular.ttf);font-weight:400}
+@font-face{font-family:"Arimo";src:url(files/LiberationSans-Bold.ttf);font-weight:700}
+:root{--ink:#24282B;--muted:#5B6066;--page:#EFECEB;--card:#FFFFFF;--line:#DCD9D1;--primary:#2F3332;--on-primary:#FFFFFF;
+      --hl:#BD7861;--ok:#287A4E;--warn-bg:#F7F6F2;--r:10px}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--page);color:var(--ink);font:400 16px/1.35 Arimo,"Liberation Sans",Arial,sans-serif}
+button{font:inherit;color:inherit;cursor:pointer}
+.bar{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:14px;height:56px;padding:0 18px;background:var(--card);border-bottom:1px solid var(--line)}
+.bar img{height:22px}
+.bar .prod{display:flex;flex-direction:column;line-height:1.2}
+.bar .prod b{font-size:15px}.bar .prod span{font-size:12px;color:var(--muted)}
+.bar .sp{flex:1}
+.prog{display:flex;align-items:center;gap:10px;font-weight:700;font-size:14px;color:var(--muted);white-space:nowrap}
+.prog .segs{display:flex;gap:5px}
+.prog .segs i{width:34px;height:7px;border-radius:4px;background:var(--line)}
+.prog .segs i.done{background:var(--hl)}.prog .segs i.cur{background:var(--primary)}
+.chips{display:flex;gap:8px;align-items:center;flex:1;justify-content:center}
+.chips .lbl{font-size:13px;color:var(--muted);margin-right:4px;white-space:nowrap}
+.chip{position:relative;width:36px;height:36px;border-radius:50%;border:2px solid var(--line);background:var(--card);font-weight:700;font-size:15px;
+      display:flex;align-items:center;justify-content:center;padding:0;flex:none}
+.chip.cur{background:var(--primary);border-color:var(--primary);color:#fff}
+.chip.done{border-color:var(--ok);color:var(--ok)}
+.chip.done.cur{color:#fff}
+.chip.soon{border-style:dashed;color:var(--muted);background:transparent}
+.chip.soon.cur{background:var(--muted);border-color:var(--muted);color:#fff}
+.chip .ck{position:absolute;right:-3px;top:-4px;width:16px;height:16px;border-radius:50%;background:var(--ok);color:#fff;font-size:11px;line-height:16px;text-align:center}
+.main{display:grid;grid-template-columns:minmax(0,760px) minmax(280px,1fr);gap:20px;padding:12px 18px 24px;max-width:1400px}
+.title{font-size:24px;font-weight:700;margin:0 0 4px;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.title small{font-size:14px;color:var(--muted);font-weight:400}
+.why{font-size:14px;color:var(--muted);margin:0 0 10px}
+.clip{position:relative;border-radius:var(--r);overflow:hidden;background:#E6E5E0}
+.clip video{display:block;width:100%;height:auto;background:#E6E5E0}
+.clip .state{display:flex;align-items:center;gap:10px;background:var(--primary);color:#fff;padding:7px 14px 7px 10px;font-size:13px;font-weight:700}
+.clip .state i{display:block;flex:1;height:4px;border-radius:2px;background:rgba(255,255,255,.35);position:relative;overflow:hidden}
+.clip .state i b{position:absolute;left:0;top:0;height:4px;width:0;background:#fff}
+.warnbox{border-radius:var(--r);background:var(--warn-bg);border-left:8px solid var(--ink);padding:26px 24px;font-size:22px;line-height:1.35}
+.warnbox b{display:block;font-size:26px;margin-bottom:8px}
+.row{display:grid;grid-template-columns:40px 6px 1fr auto;gap:12px;align-items:center;margin-top:14px;background:var(--card);
+     border:2px solid var(--primary);border-radius:var(--r);padding:12px 16px}
+.row .n{width:36px;height:36px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px}
+.row .s{width:6px;height:44px;border-radius:3px}
+.row .t{font-size:20px;line-height:1.3;font-weight:700}
+.row .done{display:flex;align-items:center;gap:6px;height:40px;padding:0 12px;border-radius:999px;border:1.5px solid var(--line);background:var(--card);font-weight:700;font-size:14px;white-space:nowrap}
+.row .done.on{background:var(--ok);border-color:var(--ok);color:#fff}
+.btns{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
+.b{display:inline-flex;align-items:center;justify-content:center;gap:9px;height:52px;padding:0 18px;border-radius:var(--r);border:1.5px solid var(--line);
+   background:var(--card);font-weight:700;font-size:16px}
+.b svg{width:22px;height:22px;flex:none}
+.b:disabled{opacity:.4;cursor:default}
+.b.primary{background:var(--primary);border-color:var(--primary);color:var(--on-primary);margin-left:auto;min-width:150px}
+.toast{margin-top:10px;font-size:14px;color:var(--muted);min-height:20px}
+.side{display:flex;flex-direction:column;gap:12px}
+.box{background:var(--card);border-radius:var(--r);padding:12px 14px}
+.box h3{margin:0 0 8px;font-size:14px;display:flex;justify-content:space-between;gap:8px}
+.box h3 span{font-weight:400;color:var(--muted);font-size:12px}
+.sheet{width:100%;border:1px solid var(--line);border-radius:6px;display:block}
+.sheetbox .sheet{height:380px;object-fit:cover;object-position:top;cursor:zoom-in}
+.overlay .sheet{height:auto}
+.need{display:flex;gap:12px;align-items:center;font-size:15px;margin:4px 0}
+.need img{height:46px;width:46px;object-fit:contain;flex:none}
+.need .noimg{width:46px;height:46px;flex:none}
+.need .k{display:inline-block;width:12px;height:12px;margin-right:6px;vertical-align:0}
+.need .tool{font-size:13px;color:var(--muted);margin-top:2px}
+.steplist{display:flex;flex-direction:column;gap:6px;margin:0;padding:0;list-style:none}
+.steplist li{display:grid;grid-template-columns:24px 5px 1fr 18px;gap:8px;align-items:center;font-size:13px;padding:6px 8px;border-radius:8px;border:1.5px solid transparent;cursor:pointer}
+.steplist li.cur{border-color:var(--primary);background:#F5F4F0}
+.steplist li .n{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--ink);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700}
+.steplist li .s{width:5px;height:18px;border-radius:2px}
+.steplist li .c{color:var(--ok);font-weight:700}
+.sheetlink{display:none;align-items:center;justify-content:space-between;background:var(--card);border-radius:var(--r);padding:14px;font-weight:700;border:0;width:100%;text-align:left;font-size:16px}
+.overlay{position:fixed;inset:0;background:rgba(28,26,25,.75);z-index:20;display:none;align-items:flex-start;justify-content:center;overflow:auto;padding:16px}
+.overlay.on{display:flex}
+.overlay .panel{background:var(--card);border-radius:var(--r);padding:12px;max-width:760px;width:100%}
+.overlay .panel .b{margin-top:10px;width:100%}
+.donebox{background:var(--card);border-radius:var(--r);padding:18px 20px;margin-top:12px}
+.donebox h2{margin:0;font-size:24px}
+.donebox p{color:var(--ink);margin:6px 0 0;font-size:17px}
+.donebox .nextbig{margin-top:14px;width:100%;justify-content:space-between;background:var(--primary);color:#fff;border-color:var(--primary);height:58px}
+.soonbox{background:var(--card);border-radius:var(--r);padding:20px}
+.soonbox h2{margin:0 0 6px;font-size:22px}
+.soonbox p{margin:0 0 12px;color:var(--muted)}
+.soonbox ol{margin:0;padding-left:22px}
+.soonbox li{margin:6px 0;font-size:16px}
+/* ---------- телефон ---------- */
+@media (max-width:760px){
+  .bar{position:static;height:auto;padding:8px 14px 10px;flex-wrap:wrap;gap:8px 10px}.bar .prod{display:none}
+  .bar .sp{display:none}
+  .prog{margin-left:auto}
+  .prog .segs i{width:14px}
+  .chips{order:3;flex:0 0 100%;gap:6px;justify-content:space-between}
+  .chips .lbl{display:none}
+  .chip{width:36px;height:36px;font-size:15px}
+  .main{display:block;padding:0 0 20px}
+  .title{font-size:21px;margin:12px 14px 4px;flex-direction:column;gap:2px}
+  .title small{font-size:13px}
+  .why{margin:0 14px 10px;font-size:13px}
+  .clip{border-radius:0}
+  .clip .state{padding:5px 12px 5px 10px;font-size:12px}
+  .warnbox{margin:0 14px;font-size:19px;padding:20px 18px}
+  .warnbox b{font-size:22px}
+  .soonbox{margin:0 14px;padding:16px}
+  .donebox{margin:12px 14px 0}
+  .row{margin:12px 14px 0;grid-template-columns:34px 6px 1fr;gap:10px;padding:10px 12px}
+  .row .done{grid-column:1/-1;justify-self:start}
+  .row .n{width:32px;height:32px;font-size:16px}
+  .row .t{font-size:18px}
+  .btns{margin:12px 14px 0;display:grid;grid-template-columns:1fr 1fr 1.2fr;gap:8px}
+  .btns .b{flex-direction:column;gap:3px;height:60px;padding:0 6px;font-size:14px}
+  .btns .b.primary{margin:0;min-width:0;order:3}
+  .btns .b.prev{order:1}.btns .b.rep{order:2}
+  .btns .b.pause,.btns .b.voice{order:4;flex-direction:row;height:48px;gap:8px}
+  .btns .b.voice{grid-column:span 2}
+  .toast{margin:8px 14px 0}
+  .side{margin:12px 14px 0}
+  .sheetbox{display:none}
+  .sheetlink{display:flex}
+}
+</style>
+</head>
+<body>
+<header class="bar">
+<div class="prod"><b id="prod">Стол EED · 487083</b><span>Инструкция по сборке</span></div>
+  <nav class="chips" id="chips" aria-label="Шаги стола"></nav>
+  <div class="prog"><span id="progtext"></span><span class="segs" id="segs"></span></div>
+</header>
+<div class="main">
+  <section>
+    <h1 class="title"><span id="steptitle"></span><small id="rowof"></small></h1>
+    <p class="why" id="why"></p>
+    <div id="stage"></div>
+    <div id="rowbox"></div>
+    <div class="btns">
+      <button class="b prev" id="bprev"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>Назад</button>
+      <button class="b rep" id="brep"><svg viewBox="0 0 24 24"><path d="M5 12a7 7 0 1 0 2.1-5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><path d="M6 3v4.5h4.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>Повтор</button>
+      <button class="b pause" id="bpause"><svg viewBox="0 0 24 24"><path d="M8 5v14M16 5v14" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/></svg><span id="pauselbl">Пауза</span></button>
+      <button class="b voice" id="bvoice"><svg viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Повтор голосом</button>
+      <button class="b primary" id="bnext"><span id="nextlbl">Далее</span><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    </div>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  </section>
+  <aside class="side">
+    <div class="box sheetbox"><h3><b id="sheetttl">Наш лист</b> <span>как в коробке</span></h3><img class="sheet" id="sheetimg" alt="Наш лист шага"></div>
+    <button class="sheetlink" id="bsheet"><span id="sheetlbl">Наш лист шага</span> <span>›</span></button>
+    <div class="box" id="needbox"></div>
+    <div class="box"><h3>В этом шаге <span id="rowscount"></span></h3><ul class="steplist" id="steplist"></ul></div>
+  </aside>
+</div>
+<div class="overlay" id="sheetov"><div class="panel"><img class="sheet" id="sheetimg2" alt="Наш лист шага"><button class="b" id="bsheetclose">Закрыть лист</button></div></div>
+<script src="files/data.js"></script>
+<script>
+(function () {
+  "use strict";
+  var V = window.VIEWER, STEPS = V.steps;
+  var $ = function (id) { return document.getElementById(id); };
+  var esc = function (t) { return String(t).replace(/[&<>"]/g, function (c) { return {"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]; }); };
+  // ---------- память устройства (может быть недоступна — страница работает и без неё) ----------
+  var store = {cur: "", done: {}};
+  try { var raw = window.localStorage.getItem(V.storage_key); if (raw) { var o = JSON.parse(raw); if (o && typeof o === "object") store = o; } } catch (e) {}
+  if (!store.done) store.done = {};
+  function save() { try { window.localStorage.setItem(V.storage_key, JSON.stringify(store)); } catch (e) {} }
+  // ---------- все экраны подряд: шаг 1 … шаг 8; у шага без видео — один экран «шаг готовится» ----------
+  var ALL = [];
+  STEPS.forEach(function (st) {
+    if (st.ready) st.screens.forEach(function (s) { ALL.push({st: st, s: s, gid: "s" + st.n + "-" + s.id}); });
+    else ALL.push({st: st, s: {id: "soon", kind: "soon"}, gid: "s" + st.n + "-soon"});
+  });
+  function find(gid) { for (var i = 0; i < ALL.length; i++) if (ALL[i].gid === gid) return i; return -1; }
+  function stepFirst(n) { for (var i = 0; i < ALL.length; i++) if (ALL[i].st.n === n) return i; return -1; }
+  // ссылка на экран: #step=3, #step=3&row=2, #step=3&done
+  function fromHash() {
+    var m = /^#step=(\d+)(?:&(?:row=(\d+)|(done)))?$/.exec(location.hash || "");
+    if (!m) return -1;
+    var n = +m[1], i0 = stepFirst(n);
+    if (i0 < 0) return -1;
+    if (m[3]) { var d = find("s" + n + "-done"); return d >= 0 ? d : i0; }
+    if (m[2]) { var r = find("s" + n + "-row-" + m[2]); return r >= 0 ? r : i0; }
+    var f = find("s" + n + "-row-1");
+    return f >= 0 ? f : i0;
+  }
+  function hashOf(it) {
+    var h = "#step=" + it.st.n;
+    if (it.s.kind === "row") h += "&row=" + it.s.row;
+    else if (it.s.kind === "warning") h += "&row=" + it.s.before_row;
+    else if (it.s.kind === "done") h += "&done";
+    return h;
+  }
+  var idx = fromHash();
+  if (idx < 0) idx = Math.max(0, find(store.cur));
+  var video = null, audio = null, paused = false;
+
+  function toast(t) { $("toast").textContent = t || ""; }
+  function rowsOf(st) { return st.ready ? st.screens.filter(function (s) { return s.kind === "row"; }) : []; }
+  function stepDone(st) { var r = rowsOf(st); return r.length > 0 && r.every(function (x) { return store.done["s" + st.n + "-" + x.id]; }); }
+
+  function chips(cur) {
+    var h = '<span class="lbl">Шаги стола</span>';
+    STEPS.forEach(function (st) {
+      var cls = "chip" + (st.n === cur.n ? " cur" : "") + (stepDone(st) ? " done" : "") + (st.ready ? "" : " soon");
+      h += '<button class="' + cls + '" data-n="' + st.n + '" aria-label="Шаг ' + st.n + (st.ready ? "" : " (готовится)") + (stepDone(st) ? ", сделан" : "") + '">' + st.n + (stepDone(st) ? '<i class="ck">✓</i>' : "") + '</button>';
+    });
+    $("chips").innerHTML = h;
+    Array.prototype.forEach.call($("chips").querySelectorAll(".chip"), function (b) { b.onclick = function () { go(stepFirst(+b.getAttribute("data-n"))); }; });
+  }
+
+  function progress(it) {
+    var st = it.st, s = it.s, rows = rowsOf(st), html = "", r = s.kind === "row" ? s.row : (s.kind === "warning" ? s.before_row : rows.length + 1);
+    rows.forEach(function (x) { html += '<i class="' + (store.done["s" + st.n + "-" + x.id] ? "done" : (x.row === r ? "cur" : "")) + '"></i>'; });
+    $("segs").innerHTML = html;
+    $("progtext").textContent = !st.ready ? "шаг " + st.n + " · готовится" : (s.kind === "done" ? "шаг " + st.n + " · итог" : "шаг " + st.n + " · " + r + " из " + rows.length);
+    $("rowof").textContent = s.kind === "row" ? "строка " + s.row + " из " + rows.length : (s.kind === "warning" ? "перед строкой " + s.before_row : "");
+  }
+
+  function steplist(it) {
+    var st = it.st, html = "";
+    $("rowscount").textContent = st.rows_total + (st.rows_total === 1 ? " строка" : (st.rows_total < 5 ? " строки" : " строк"));
+    if (st.ready) {
+      st.screens.forEach(function (x) {
+        if (x.kind !== "row") return;
+        var gid = "s" + st.n + "-" + x.id;
+        html += '<li data-g="' + gid + '" class="' + (it.s === x ? "cur" : "") + '"><span class="n">' + x.row + '</span><i class="s" style="background:' + x.color + '"></i>' +
+                '<span>' + esc(x.text.split(" — ")[0]) + '</span><span class="c">' + (store.done[gid] ? "✓" : "") + '</span></li>';
+      });
+    } else {
+      st.rows_text.forEach(function (x) {
+        html += '<li data-g="' + "s" + st.n + "-soon" + '"><span class="n">' + x.row + '</span><i class="s" style="background:#DCD9D1"></i><span>' + esc(x.text.split(" — ")[0]) + '</span><span></span></li>';
+      });
+    }
+    $("steplist").innerHTML = html;
+    Array.prototype.forEach.call($("steplist").children, function (li) { li.onclick = function () { var i = find(li.getAttribute("data-g")); if (i >= 0) go(i); }; });
+  }
+
+  function need(it) {
+    var s = it.s, st = it.st, nx = STEPS[st.n];
+    if (s.kind !== "row") {
+      var msg = s.kind === "warning" ? "Прочтите предупреждение — дальше строка " + s.before_row + "." :
+                (s.kind === "done" ? "Шаг " + st.n + " собран. Дальше — следующий шаг." : "Видео этого шага готовится. Пока — по нашему листу шага " + st.n + ".");
+      $("needbox").innerHTML = '<h3>Что нужно</h3><div class="need" style="color:var(--muted)">' + msg + '</div>';
+      return;
+    }
+    var h = '<h3>Что нужно</h3>';
+    s.need.forEach(function (n) {
+      h += '<div class="need">' + (n.img ? '<img src="' + n.img + '" alt="">' : '<span class="noimg"></span>') + '<div><span class="k" style="background:' + n.color + '"></span><b>' + esc(n.name) + '</b> · ' + n.qty + ' шт.' +
+           (s.tool && n === s.need[0] ? '<div class="tool">инструмент: ' + esc(s.tool) + '</div>' : '') + '</div></div>';
+    });
+    $("needbox").innerHTML = h;
+  }
+
+  function tick() {
+    var s = ALL[idx].s;
+    if (video && (s.kind === "row" || s.kind === "done")) {
+      var bar = document.querySelector(".clip .state i b"), stx = document.querySelector(".clip .state span");
+      if (bar && video.duration) bar.style.width = Math.min(100, 100 * video.currentTime / video.duration) + "%";
+      if (stx) stx.textContent = video.ended ? "клип закончился" : (video.paused ? "пауза" : (s.kind === "done" ? "итог шага" : "идёт клип"));
+    }
+    window.requestAnimationFrame(tick);
+  }
+
+  function kick(v) {
+    if (!v) return;
+    v.addEventListener("canplay", function () { if (!paused && v.paused && !v.ended && v.currentTime < 0.05) { var p = v.play(); if (p && p.catch) p.catch(function () {}); } });
+  }
+
+  function stopMedia() {
+    if (audio) { try { audio.pause(); } catch (e) {} audio = null; }
+    if (video) { try { video.pause(); } catch (e) {} }
+  }
+
+  function clipHtml(s) {
+    return '<div class="clip"><video muted autoplay playsinline preload="auto" ' + (s.kind === "done" ? "loop " : "") + 'width="' + s.clip_w + '" height="' + s.clip_h + '" src="' + s.clip + '"></video>' +
+      '<div class="state"><svg viewBox="0 0 24 24" width="16" height="16"><path d="M7 5l12 7-12 7z" fill="#fff"/></svg><span>идёт клип</span><i><b></b></i></div></div>';
+  }
+
+  function render() {
+    stopMedia();
+    var it = ALL[idx], s = it.s, st = it.st, nextSt = STEPS[st.n];
+    store.cur = it.gid; save();
+    try { var h = hashOf(it); if (location.hash !== h) history.replaceState(null, "", h); } catch (e) {}
+    $("steptitle").textContent = "Шаг " + st.n + " · " + st.title;
+    $("why").textContent = st.why ? "Зачем: " + st.why : "";
+    $("sheetimg").src = st.sheet; $("sheetimg2").src = st.sheet;
+    $("sheetttl").textContent = "Наш лист · шаг " + st.n; $("sheetlbl").textContent = "Наш лист шага " + st.n;
+    chips(st); progress(it); steplist(it); need(it); toast("");
+    paused = false; $("pauselbl").textContent = "Пауза";
+    var stage = $("stage"), rowbox = $("rowbox");
+    video = null; rowbox.innerHTML = "";
+    if (s.kind === "row") {
+      stage.innerHTML = clipHtml(s);
+      video = stage.querySelector("video"); kick(video);
+      var p = video.play(); if (p && p.catch) p.catch(function () {});
+      var dk = it.gid;
+      rowbox.innerHTML = '<div class="row"><span class="n">' + s.row + '</span><i class="s" style="background:' + s.color + '"></i><span class="t">' + esc(s.text) + '</span>' +
+        '<button class="done' + (store.done[dk] ? " on" : "") + '" id="bdone">' + (store.done[dk] ? "✓ Сделано" : "Отметить: сделано") + '</button></div>';
+      $("bdone").onclick = function () { if (store.done[dk]) delete store.done[dk]; else store.done[dk] = 1; save(); renderKeep(); };
+    } else if (s.kind === "warning") {
+      stage.innerHTML = '<div class="warnbox"><b>Внимание!</b>' + esc(s.text) + '</div>';
+    } else if (s.kind === "done") {
+      stage.innerHTML = (s.clip ? clipHtml(s) : "") + '<div class="donebox"><h2>Шаг ' + st.n + ' сделан</h2><p>' + esc(s.text) + '</p>' +
+        (nextSt ? '<button class="b nextbig" id="bbig"><span>Следующий шаг: ' + nextSt.n + ' · ' + esc(nextSt.title) + (nextSt.ready ? "" : " (видео готовится)") + '</span><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>' : '<p>Это последний шаг: стол собран.</p>') + '</div>';
+      video = stage.querySelector("video"); kick(video);
+      if (video) { var p2 = video.play(); if (p2 && p2.catch) p2.catch(function () {}); }
+      if ($("bbig")) $("bbig").onclick = function () { go(idx + 1); };
+    } else {
+      var rt = "";
+      st.rows_text.forEach(function (x) { rt += "<li>" + esc(x.text) + "</li>"; });
+      stage.innerHTML = '<div class="soonbox"><h2>Видео шага ' + st.n + ' готовится</h2><p>Пока этот шаг можно собрать по нашему листу (справа или кнопка «Наш лист шага ' + st.n + '»). Строки шага:</p><ol>' + rt + '</ol></div>';
+    }
+    var nxtIt = ALL[idx + 1];
+    $("nextlbl").textContent = s.kind === "done" || s.kind === "soon" ? "Следующий шаг" : (nxtIt && nxtIt.s.kind === "done" ? "Итог шага" : "Далее");
+    $("bprev").disabled = idx === 0;
+    $("bnext").disabled = idx === ALL.length - 1;
+    $("brep").disabled = !video;
+    $("bpause").disabled = !video;
+    $("bvoice").disabled = s.kind === "soon";
+    window.scrollTo(0, 0);
+  }
+  function renderKeep() { var y = window.scrollY, t = video ? video.currentTime : 0, was = video && video.paused; render(); if (video) { video.currentTime = t; if (was) video.pause(); } window.scrollTo(0, y); }
+  function go(i) { if (i < 0) return; idx = Math.min(Math.max(0, i), ALL.length - 1); render(); }
+
+  $("bprev").onclick = function () { go(idx - 1); };
+  $("bnext").onclick = function () { go(idx + 1); };
+  $("brep").onclick = function () { if (!video) return; video.currentTime = 0; paused = false; $("pauselbl").textContent = "Пауза"; var p = video.play(); if (p && p.catch) p.catch(function () {}); };
+  $("bpause").onclick = function () {
+    if (!video) return;
+    if (video.paused) { paused = false; var p = video.play(); if (p && p.catch) p.catch(function () {}); if (audio && audio.paused) audio.play().catch(function () {}); $("pauselbl").textContent = "Пауза"; }
+    else { video.pause(); paused = true; if (audio) audio.pause(); $("pauselbl").textContent = "Продолжить"; }
+  };
+  $("bvoice").onclick = function () {
+    var s = ALL[idx].s;
+    if (audio) { try { audio.pause(); } catch (e) {} audio = null; }
+    if (!s.voice) { toast("Голос для этого места готовится — пока смотрите клип и читайте строку."); return; }
+    audio = new Audio(s.voice);
+    audio.onerror = function () { toast("Голос готовится — скоро будет."); };
+    audio.onplaying = function () { toast(""); };
+    var p = audio.play(); if (p && p.catch) p.catch(function () { toast("Голос готовится — скоро будет."); });
+  };
+  $("bsheet").onclick = function () { $("sheetov").classList.add("on"); };
+  $("sheetimg").onclick = function () { $("sheetov").classList.add("on"); };
+  $("bsheetclose").onclick = function () { $("sheetov").classList.remove("on"); };
+  document.addEventListener("visibilitychange", function () {
+    if (document.visibilityState === "visible" && video && !paused && video.paused && !video.ended) { var p = video.play(); if (p && p.catch) p.catch(function () {}); }
+  });
+  window.addEventListener("hashchange", function () { var i = fromHash(); if (i >= 0 && i !== idx) go(i); });
+  render();
+  window.requestAnimationFrame(tick);
+})();
+</script>
+</body>
+</html>
