@@ -120,7 +120,9 @@ button{font:inherit;color:inherit;cursor:pointer}
 .figsvg [data-g],.figsvg [data-n]{transition:opacity .3s}
 .figsvg.focus [data-g]:not(.hl){opacity:.42}
 .figsvg.focus [data-n]:not(.hl){opacity:.5}
+.figsvg.focus [data-n][data-k="ld"].hl,.figsvg.focus [data-n][data-k="cl"].hl{opacity:1}
 .figsvg.focus g[font-family]>text{opacity:.7}
+.figsvg .dashsub>polyline:not(.hl){opacity:.3}
 .figsvg .glow{pointer-events:none;animation:glowp 1.1s ease-in-out infinite}
 @keyframes glowp{0%,100%{opacity:.22}50%{opacity:.85}}
 .figsvg [data-n].hl[data-k="bd"]{animation:ovp 1.1s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
@@ -446,56 +448,89 @@ button{font:inherit;color:inherit;cursor:pointer}
   }
 
   // состояние под клипом: «клип закончился» — только когда закончились и клип, и фраза (фраза длиннее клипа: последний кадр держится)
-  // ---------- рисунок шага с подсветкой текущей строки (образец) ----------
-  // Слои рисунка собрал build_viewer_all.py из вёрстки нашего PDF: группы data-g (крепёж, пунктиры, контуры) и data-n (овалы номеров и выноски).
-  // Подсветка — только классы и копии групп под ними (glow): ничего не перерисовывается.
+  // ---------- рисунок шага с подсветкой текущей строки ----------
+  // Справа — ровно рисунок нашего PDF (его вёрстка: номера и овалы там же, где в PDF, рисунок только крупнее). Подсветка — слой поверх в тех же координатах:
+  // классы на готовых группах (data-g, data-n) и их копии-«свечение» (glow). Ничего не перерисовывается. Рисунок шага подгружается файлом files/fig/sN.js.
   var side = $("side"), mqPhone = window.matchMedia ? window.matchMedia("(max-width:760px)") : {matches: false};
+  var figLoading = {};
   function figPlace() {
     var box = $("figbox"), slot = $("figslot");
     if (mqPhone.matches) { if (box.parentNode !== slot) slot.appendChild(box); box.classList.add("inline"); }
     else { if (box.parentNode !== side) side.insertBefore(box, side.firstChild); box.classList.remove("inline", "zoom"); }
   }
   if (mqPhone.addEventListener) mqPhone.addEventListener("change", figPlace); else if (mqPhone.addListener) mqPhone.addListener(figPlace);
-  function figSetup(st) {
-    var box = $("figbox"), f = st.fig;
-    if (!f) { box.hidden = true; side.classList.remove("hasfig"); return null; }
-    if (box.getAttribute("data-step") !== String(st.n)) { $("figwrap").innerHTML = f.svg; box.setAttribute("data-step", String(st.n)); }
-    box.hidden = false; side.classList.add("hasfig");
-    $("figttl").textContent = "Рисунок · шаг " + st.n;
-    figPlace();
-    return $("figwrap").querySelector("svg");
+  function figGet(st, cb) {                                   // рисунок шага: уже загружен или грузим файл
+    window.FIGS = window.FIGS || {};
+    if (window.FIGS[st.n]) { cb(window.FIGS[st.n]); return; }
+    if (figLoading[st.n]) { figLoading[st.n].push(cb); return; }
+    figLoading[st.n] = [cb];
+    var sc = document.createElement("script");
+    sc.src = st.fig.js;
+    sc.onload = function () { var q = figLoading[st.n]; figLoading[st.n] = null; q.forEach(function (f) { f(window.FIGS[st.n]); }); };
+    sc.onerror = function () { var q = figLoading[st.n]; figLoading[st.n] = null; q.forEach(function (f) { f(null); }); };
+    document.head.appendChild(sc);
   }
+  function figShow(it) {
+    var box = $("figbox"), st = it.st;
+    if (!st.fig) { box.hidden = true; side.classList.remove("hasfig"); return; }
+    $("figttl").textContent = "Рисунок · шаг " + st.n;
+    box.hidden = false; side.classList.add("hasfig");
+    figPlace();
+    figGet(st, function (svg) {
+      if (ALL[idx] !== it) return;                              // за время загрузки экран сменился
+      if (!svg) { box.hidden = true; side.classList.remove("hasfig"); return; }
+      if (box.getAttribute("data-step") !== String(st.n)) { $("figwrap").innerHTML = svg; box.setAttribute("data-step", String(st.n)); }
+      figHighlight(it, $("figwrap").querySelector("svg"));
+    });
+  }
+  function q(svg, sel) { return Array.prototype.slice.call(svg.querySelectorAll(sel)); }
   function figHighlight(it, svg) {
     if (!svg) return;
-    Array.prototype.forEach.call(svg.querySelectorAll(".glow"), function (g) { g.parentNode.removeChild(g); });
-    Array.prototype.forEach.call(svg.querySelectorAll(".hl"), function (g) { g.classList.remove("hl"); });
-    Array.prototype.forEach.call(svg.querySelectorAll("[data-n] rect"), function (r) { r.style.strokeWidth = ""; });
+    q(svg, ".glow").forEach(function (g) { g.parentNode.removeChild(g); });
+    q(svg, ".hl,.dashsub").forEach(function (g) { g.classList.remove("hl"); g.classList.remove("dashsub"); });
+    q(svg, "[data-n] rect").forEach(function (r) { r.style.strokeWidth = ""; });
     svg.classList.remove("focus");
     $("figcap").textContent = "";
     var s = it.s, spec = s.kind === "row" && it.st.fig.rows[s.row];
     if (!spec) return;                                           // «Внимание!», итог шага: рисунок ровно, без пульса
-    svg.classList.add("focus");
-    var groups = [], glowOf = [], color = spec.color || "#197D87";
-    if (spec.part) { groups = ["fill-part", "ln-part-edge", "ln-part-contour", "ln-part-end"]; glowOf = ["ln-part-contour"]; }
-    else { groups = ["out-" + spec.kind, "dash-" + spec.kind + "-o", "dash-" + spec.kind + "-c", "dash-" + spec.kind + "-s"]; glowOf = ["out-" + spec.kind, "dash-" + spec.kind + "-o"]; }
-    groups.forEach(function (n) {
-      var g = svg.querySelector('[data-g="' + n + '"]'); if (!g) return;
-      g.classList.add("hl");
-      if (glowOf.indexOf(n) >= 0) {
-        var c = g.cloneNode(true);
-        c.removeAttribute("data-g"); c.setAttribute("class", "glow"); c.setAttribute("stroke", color);
-        c.setAttribute("stroke-width", n.indexOf("dash") === 0 ? "30" : "34"); c.setAttribute("stroke-linecap", "round"); c.setAttribute("stroke-linejoin", "round");
+    var color = spec.color || "#197D87", did = false;
+    var glow = function (g, w) {                                  // свечение — копия группы цветом вида крепежа, пульсирует
+      var c = g.cloneNode(true);
+      c.removeAttribute("data-g"); c.setAttribute("class", "glow"); c.setAttribute("stroke", color);
+      c.setAttribute("stroke-width", String(w)); c.setAttribute("stroke-linecap", "round"); c.setAttribute("stroke-linejoin", "round");
+      Array.prototype.forEach.call(c.querySelectorAll("*"), function (n) { n.removeAttribute("stroke-dasharray"); n.removeAttribute("stroke"); n.removeAttribute("stroke-width"); });
+      g.parentNode.insertBefore(c, g);
+    };
+    var byG = function (n) { return svg.querySelector('[data-g="' + n.replace(/"/g, '\\"') + '"]'); };
+    (spec.outline || []).forEach(function (n) { var g = byG(n); if (g) { g.classList.add("hl"); glow(g, 34); did = true; } });
+    (spec.part || []).forEach(function (n) { var g = byG(n); if (g) { g.classList.add("hl"); if (n.indexOf("линии-") === 0 && n.indexOf("контур") > 0) glow(g, 30); did = true; } });
+    var dash = spec.dash || {};
+    Object.keys(dash).forEach(function (n) {                       // штриховые линии строки: остальные линии той же группы приглушены
+      var g = byG(n); if (!g) return;
+      var lines = g.querySelectorAll("polyline");
+      g.classList.add("hl"); g.classList.add("dashsub");
+      dash[n].forEach(function (k) { if (lines[k]) lines[k].classList.add("hl"); });
+      if (n.indexOf("-обводка") > 0) {
+        var c = g.cloneNode(false); c.setAttribute("class", "glow"); c.removeAttribute("data-g");
+        dash[n].forEach(function (k) { if (lines[k]) { var l = lines[k].cloneNode(true); l.removeAttribute("stroke-dasharray"); l.removeAttribute("stroke"); l.removeAttribute("stroke-width"); c.appendChild(l); } });
+        c.setAttribute("stroke", color); c.setAttribute("stroke-width", "30"); c.setAttribute("stroke-linecap", "round"); c.setAttribute("fill", "none");
         g.parentNode.insertBefore(c, g);
       }
+      did = true;
     });
     var labels = [];
     (spec.holes || []).forEach(function (h) {
-      Array.prototype.forEach.call(svg.querySelectorAll('[data-n="' + h + '"]'), function (g) {
-        g.classList.add("hl");
+      q(svg, '[data-n][data-k="bd"]').forEach(function (g) {
+        if (g.getAttribute("data-n") !== h) return;
+        g.classList.add("hl"); did = true;
         var r = g.querySelector("rect"); if (r) { r.style.strokeWidth = String(parseFloat(r.getAttribute("stroke-width") || "6") * 1.7); labels.push(r.getAttribute("data-label")); }
       });
+      q(svg, '[data-n][data-k="ld"]').forEach(function (g) { if (g.getAttribute("data-n") === h) g.classList.add("hl"); });
     });
-    $("figcap").textContent = "Подсвечено: " + (spec.part ? "деталь " + (spec.name || "") : (spec.name || "") + (labels.length ? " · отверстия " + labels.join(", ") : ""));
+    if (spec.callout) q(svg, '[data-n^="' + spec.callout + '"]').forEach(function (g) { g.classList.add("hl"); did = true; });
+    if (!did) return;
+    svg.classList.add("focus");
+    $("figcap").textContent = "Подсвечено: " + (spec.name || "") + (labels.length && labels.length <= 6 ? " · отверстия " + labels.join(", ") : "");
   }
   $("bfigfull").onclick = function () { $("sheetov").classList.add("on"); };
   $("bfigclose").onclick = function () { $("figbox").classList.remove("zoom"); };
@@ -530,7 +565,7 @@ button{font:inherit;color:inherit;cursor:pointer}
     $("sheetimg").src = st.sheet; $("sheetimg2").src = st.sheet;
     $("sheetttl").textContent = "Наш лист · шаг " + st.n; $("sheetlbl").textContent = "Наш лист шага " + st.n;
     chips(st); progress(it); steplist(it); need(it); toast("");
-    figHighlight(it, figSetup(st));
+    figShow(it);
     paused = false; $("pauselbl").textContent = "Пауза";
     var stage = $("stage"), rowbox = $("rowbox");
     video = null; rowbox.innerHTML = "";
